@@ -39,8 +39,17 @@ def one_week(xs):
     ys = []
     for x in xs[:7]:
         ys.append(cc('■', cs(x)))
-    return ' '.join(ys)
+    return ys
 
+def adjust_left(xs):
+    if len(xs) >= 7:
+        return xs
+    return [' '] * (7 - len(xs)) + xs
+
+def adjust_right(xs):
+    if len(xs) >= 7:
+        return xs
+    return xs + [' '] * (7 - len(xs))
 
 c_bg = 235
 c_fg = 255
@@ -167,14 +176,21 @@ class Calender:
         buf.append('\n')
         self.b(''.join(buf))
 
-    def make_weekdays(self, sdl):
+    def make_row(self, sdl):
         buf = ['|']
+        head = True
         for xs in sdl:
-            buf.append(' S M T W T F S |')
+            if head:
+                buf.append(' ' + ' '.join(adjust_left(xs)) + ' |')
+                head = False
+            else:
+                buf.append(' ' + ' '.join(adjust_right(xs)) + ' |')
+
         buf.append('\n')
         self.b(''.join(buf))
 
-        weekday = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+    def make_weekdays(self, sdl):
+        weekday = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
         t = []
         for x in self.term:
             if x == self.today:
@@ -183,19 +199,16 @@ class Calender:
                 t.append(weekday[x.weekday()])
         self.t = t
         splitted = split_term(self.term, ys=self.t)
-        print(splitted)
+        self.make_row(splitted)
 
-    def make_score_row(self, sdl):
-        buf = ['|']
-        for xs in sdl:
-            scores = [ date_to_score(x) for x in xs ]
-            squares = one_week(scores)
-            buf.append(' ' + squares + ' |')
-        buf.append('\n')
-        self.b(''.join(buf))
+    def make_scores(self):
+        for k, v in self.table.items():
+            attr = v[0]
+            table = v[1]
 
-    def make_scores(self, sdl):
-        pass
+            t = list(map(one_week, split_term(self.term, ys=table.values.tolist())))
+            #print('score:', t)
+            self.make_row(t)
 
     def clear(self):
         self.buffer = []
@@ -215,7 +228,8 @@ class Calender:
         self.make_header()
         self.make_date_header(sdl)
         self.make_weekdays(sdl)
-        self.make_scores(sdl)
+        #self.make_score_row(sdl)
+        self.make_scores()
         self.flush()
 
     def color_sample(self):
@@ -245,15 +259,15 @@ c.show()
 #import sys
 #sys.exit(0)
 
-c.color_sample()
-c.sample()
+#c.color_sample()
+#c.sample()
 
-print('')
+#print('')
 
-for k, v in c.table.items():
-    print(k)
-    print(type(v[0]))
-    print(type(v[1]))
+#for k, v in c.table.items():
+#    print(k)
+#    print(type(v[0]))
+#    print(type(v[1]))
 
-for x in c.t:
-    print(x)
+#for x in c.t:
+#    print(x)
